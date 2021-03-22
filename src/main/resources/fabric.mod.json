@@ -1,25 +1,25 @@
 {
   "schemaVersion": 1,
   "id": "bhops",
-  "version": "1.0.0",
+  "version": "0.1.0",
 
   "name": "BHops",
-  "description": "Bunnyhops in minecraft!",
+  "description": "Skill-based jumping.",
   "authors": [
     "Smol Fofa"
   ],
   "contact": {
-    "homepage": "https://fabricmc.net/",
-    "sources": "https://github.com/FabricMC/fabric-example-mod"
+    "homepage": "",
+    "sources": "https://github.com/hatninja/Bhops"
   },
 
   "license": "CC0-1.0",
-  "icon": "assets/modid/icon.png",
+  "icon": "assets/bhops/icon.png",
 
   "environment": "*",
   "entrypoints": {
     "main": [
-      "net.smol.Bhops.Bhops"
+      "me.smol.bhops.Bhops"
     ]
   },
   "mixins": [

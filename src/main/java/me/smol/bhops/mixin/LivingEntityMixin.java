@@ -1,4 +1,4 @@
-package net.smol.Bhops.mixin;
+package me.smol.bhops.mixin;
 
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.*;

@@ -1,4 +1,4 @@
-package net.smol.Bhops;
+package me.smol.bhops;
 
 import net.fabricmc.api.ModInitializer;
 
