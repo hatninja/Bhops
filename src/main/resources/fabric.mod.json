@@ -1,15 +1,15 @@
 {
   "schemaVersion": 1,
   "id": "bhops",
-  "version": "0.1.0",
+  "version": "${version}",
 
   "name": "BHops",
-  "description": "Skill-based jumping.",
+  "description": "Skill-based jumping mechanics.",
   "authors": [
     "Smol Fofa"
   ],
   "contact": {
-    "homepage": "",
+    "homepage": "https://github.com/hatninja/",
     "sources": "https://github.com/hatninja/Bhops"
   },
 
@@ -19,17 +19,17 @@
   "environment": "*",
   "entrypoints": {
     "main": [
-      "me.smol.bhops.Bhops"
+      "smol.bhops.Bhops"
+    ],
+    "modmenu": [
+      "smol.bhops.config.BhopsMenu"
     ]
   },
   "mixins": [
     "bhops.mixins.json"
   ],
-
   "depends": {
-    "fabricloader": ">=0.7.4",
-    "fabric": "*",
-    "minecraft": "1.16.x"
+    "fabric": "*"
   },
   "suggests": {
     "another-mod": "*"

@@ -6,27 +6,41 @@ plugins {
 sourceCompatibility = JavaVersion.VERSION_1_8
 targetCompatibility = JavaVersion.VERSION_1_8
 
-archivesBaseName = project.archives_base_name
+mod_id = project.mod_id
 version = project.mod_version
 group = project.maven_group
 
+
 repositories {
-	// Add repositories to retrieve artifacts from in here.
-	// You should only use this when depending on other mods because
-	// Loom adds the essential maven repositories to download Minecraft and libraries from automatically.
-	// See https://docs.gradle.org/current/userguide/declaring_repositories.html
-	// for more information about repositories.
+	maven { url = "https://maven.shedaniel.me/" }
+	maven { url = "https://maven.fabricmc.net/io/github/prospector/modmenu/"}
+	maven { url = "https://minecraft.curseforge.com/api/maven" }
+	maven { url = "https://maven.terraformersmc.com/" }
+	maven { url = "https://maven.fabricmc.net/net/fabricmc/fabric-api/fabric-api" }
 }
 
 //https://modmuss50.me/fabric.html
 
 dependencies {
-	minecraft "com.mojang:minecraft:1.16.5"
-	mappings "net.fabricmc:yarn:1.16.5+build.5:v2"
-	modImplementation "net.fabricmc:fabric-loader:0.11.3"
+	minecraft "com.mojang:minecraft:${project.minecraft_version}"
+	mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
+	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
 
-	//Fabric api
-	modImplementation "net.fabricmc.fabric-api:fabric-api:0.32.0+1.16"
+	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
+
+	modApi "me.sargunvohra.mcmods:autoconfig1u:${project.autoconfig_version}"
+	include "me.sargunvohra.mcmods:autoconfig1u:${project.autoconfig_version}"
+
+	modApi ("me.shedaniel.cloth:config-2:${project.clothconfig_version}") {
+		exclude module: 'fabric-api'
+	}
+	include ("me.shedaniel.cloth:config-2:${project.clothconfig_version}") {
+		exclude module: 'fabric-api'
+	}
+
+	modImplementation("com.terraformersmc:modmenu:${project.modmenu_version}") {
+		exclude(group: "net.fabricmc.fabric-api")
+	}
 }
 
 processResources {
@@ -62,7 +76,7 @@ java {
 
 jar {
 	from("LICENSE") {
-		rename { "${it}_${project.archivesBaseName}"}
+		rename { "${it}_${project.mod_id}"}
 	}
 }
 
