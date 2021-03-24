@@ -5,6 +5,8 @@ import net.minecraft.entity.*;
 import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.effect.StatusEffects;
+import net.minecraft.entity.player.PlayerAbilities;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
@@ -62,12 +64,18 @@ public abstract class LivingEntityMixin extends Entity {
     public void travel(Vec3d movementInput, CallbackInfo ci) {
         //if (!this.canMoveVoluntarily() && !this.isLogicalSideForUpdatingMovement()) { return; }
 
-        //Cancel override if not in plain walking state.
-        //TODO: Creative flying state.
+        //Cancel override if not in plain walking state..
         if (this.isTouchingWater() || this.isInLava() || this.isFallFlying()) { return; }
 
         //Toggle Bhops
         if (!config.enableBhops) {return;}
+
+        //Enable for Players only
+        if (config.exclusiveToPlayers && this.getType() != EntityType.PLAYER) { return; }
+
+        //Disable on creative flying.
+        if (this.getType() == EntityType.PLAYER
+                && isFlying((PlayerEntity) this.world.getEntityById(super.getEntityId()))) { return; }
 
         //Reverse multiplication done by the function that calls this one.
         this.sidewaysSpeed /= 0.98F;
@@ -87,7 +95,8 @@ public abstract class LivingEntityMixin extends Entity {
         //
         //Apply Friction
         //
-        if (this.wasOnGround && this.onGround) {
+        boolean fullGrounded = this.wasOnGround && this.onGround; //Allows for no friction 1-frame upon landing.
+        if (fullGrounded) {
             Vec3d velFin = this.getVelocity();
             Vec3d horFin = new Vec3d(velFin.x,0.0F,velFin.z);
             float speed = (float) horFin.length();
@@ -111,12 +120,7 @@ public abstract class LivingEntityMixin extends Entity {
         // Accelerate
         //
         if (sI != 0.0F || fI != 00) {
-            Vec3d forward = movementInputToVelocity(new Vec3d(0.0F, 0.0F, fI), 1.0F, this.yaw);
-            Vec3d right = movementInputToVelocity(new Vec3d(sI, 0.0F, 0.0F), 1.0F, this.yaw);
-
             Vec3d moveDir = movementInputToVelocity(new Vec3d(sI, 0.0F, fI), 1.0F, this.yaw);
-
-            //Vec3d moveDir = forward.add(right);
             Vec3d accelVec = this.getVelocity();
 
             double projVel = new Vec3d(accelVec.x, 0.0F, accelVec.z).dotProduct(moveDir);
@@ -128,11 +132,12 @@ public abstract class LivingEntityMixin extends Entity {
             }
             Vec3d accelDir = moveDir.multiply(Math.max(accelVel, 0.0F));
 
-            this.setVelocity(this.getVelocity().add(accelDir));
+            this.setVelocity(accelVec.add(accelDir));
 
-            if (this.getVelocity().lengthSquared() > (config.sv_maxvelocity * config.sv_maxvelocity)) {
-                this.setVelocity(this.getVelocity().multiply(this.getVelocity().length()/config.sv_maxvelocity));
-            }
+            //Too much effort to implement a speedcap.
+            //if (accelVec.lengthSquared() > (config.sv_maxvelocity * config.sv_maxvelocity)) {
+            //    this.setVelocity(this.getVelocity().normalize().multiply(config.sv_maxvelocity));
+            //}
         }
 
         this.setVelocity(this.applyClimbingSpeed(this.getVelocity()));
@@ -143,7 +148,7 @@ public abstract class LivingEntityMixin extends Entity {
         //
         Vec3d preVel = this.getVelocity();
         if ((this.horizontalCollision || this.jumping) && this.isClimbing()) {
-            preVel = new Vec3d(preVel.x * 0.9D, 0.2D, preVel.z * 0.9D);
+            preVel = new Vec3d(preVel.x * 0.7D, 0.2D, preVel.z * 0.7D);
         }
 
         //
@@ -204,5 +209,9 @@ public abstract class LivingEntityMixin extends Entity {
         float f = MathHelper.sin(yaw * 0.017453292F);
         float g = MathHelper.cos(yaw * 0.017453292F);
         return new Vec3d(vec3d.x * (double)g - vec3d.z * (double)f, vec3d.y, vec3d.z * (double)g + vec3d.x * (double)f);
+    }
+
+    private static boolean isFlying(PlayerEntity player) {
+        return player.abilities.flying;
     }
 }
