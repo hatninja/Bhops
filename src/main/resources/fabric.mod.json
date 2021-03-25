@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "id": "bhops",
-  "version": "${version}",
+  "version": "1.0.0",
 
   "name": "BHops",
   "description": "Skill-based jumping mechanics.",
@@ -13,7 +13,7 @@
     "sources": "https://github.com/hatninja/Bhops"
   },
 
-  "license": "CC0-1.0",
+  "license": "MIT",
   "icon": "assets/bhops/icon.png",
 
   "environment": "*",

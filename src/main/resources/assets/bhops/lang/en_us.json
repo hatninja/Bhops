@@ -2,10 +2,12 @@
   "text.autoconfig.bhops.title": "BHops Options",
   "text.autoconfig.bhops.option.showSpeed": "Speedometer",
   "text.autoconfig.bhops.option.enableBhops": "Enable Bunnyhopping",
+  "text.autoconfig.bhops.option.exclusiveToPlayers": "Exclude Mobs",
   "text.autoconfig.bhops.option.sv_maxvelocity": "sv_maxvelocity",
   "text.autoconfig.bhops.option.sv_friction": "sv_friction",
   "text.autoconfig.bhops.option.sv_accelerate": "sv_accelerate",
   "text.autoconfig.bhops.option.sv_airaccelerate": "sv_airaccelerate",
   "text.autoconfig.bhops.option.sv_maxairspeed": "sv_maxairspeed",
+  "text.autoconfig.bhops.option.sv_airspeedcutoff": "Air Speed Cutoff",
   "text.autoconfig.bhops.option.maxSpeedMul": "Default Speed Multiplier"
 }
