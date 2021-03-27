@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "id": "bhops",
-  "version": "1.0.0",
+  "version": "1.0.2",
 
   "name": "BHops",
   "description": "Skill-based jumping mechanics.",
