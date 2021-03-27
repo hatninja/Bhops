@@ -5,7 +5,6 @@ import net.minecraft.entity.*;
 import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.effect.StatusEffects;
-import net.minecraft.entity.player.PlayerAbilities;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
@@ -25,7 +24,6 @@ import java.util.Map;
 //FullWalkMove( )
 //PlayerMove()
 
-//TODO: Speed Display
 //TODO: Custom Jump sounds
 //TODO: Water Controls
 
@@ -41,7 +39,7 @@ public abstract class LivingEntityMixin extends Entity {
     @Shadow public float limbDistance;
     @Shadow public float lastLimbDistance;
     @Shadow public float limbAngle;
-    @Shadow public boolean jumping;
+    @Shadow protected boolean jumping;
     @Shadow @Final private Map<StatusEffect, StatusEffectInstance> activeStatusEffects;
 
     @Shadow protected abstract Vec3d applyClimbingSpeed(Vec3d velocity);
@@ -52,9 +50,6 @@ public abstract class LivingEntityMixin extends Entity {
     @Shadow public abstract boolean isClimbing();
 
     private boolean wasOnGround;
-
-
-    private final double sv_gravity = 0.08D;
 
     public LivingEntityMixin(EntityType<?> type, World world) {
         super(type, world);
@@ -68,15 +63,15 @@ public abstract class LivingEntityMixin extends Entity {
         if (this.isTouchingWater() || this.isInLava() || this.isFallFlying()) { return; }
 
         //Toggle Bhops
-        if (!config.enableBhops) {return;}
+        if (!config.enableBhops) { return; }
 
         //Enable for Players only
         if (config.exclusiveToPlayers && this.getType() != EntityType.PLAYER) { return; }
 
-
         //Disable on creative flying.
         if (this.getType() == EntityType.PLAYER
                 && isFlying((PlayerEntity) this.world.getEntityById(super.getEntityId()))) { return; }
+
 
         //Reverse multiplication done by the function that calls this one.
         this.sidewaysSpeed /= 0.98F;
@@ -87,6 +82,7 @@ public abstract class LivingEntityMixin extends Entity {
 
         //Have no jump cooldown, why not?
         this.jumpingCooldown = 0;
+
 
         //Get Slipperiness and Movement speed.
         BlockPos blockPos = this.getVelocityAffectingPos();
@@ -120,7 +116,7 @@ public abstract class LivingEntityMixin extends Entity {
         //
         // Accelerate
         //
-        if (sI != 0.0F || fI != 00) {
+        if (sI != 0.0F || fI != 0.0F) {
             Vec3d moveDir = movementInputToVelocity(new Vec3d(sI, 0.0F, fI), 1.0F, this.yaw);
             Vec3d accelVec = this.getVelocity();
 
@@ -156,7 +152,7 @@ public abstract class LivingEntityMixin extends Entity {
         //Apply Gravity (If not in Water)
         //
         double yVel = preVel.y;
-        double gravity = sv_gravity;
+        double gravity = config.sv_gravity;
         if (preVel.y <= 0.0D && this.hasStatusEffect(StatusEffects.SLOW_FALLING)) {
             gravity = 0.01D;
             this.fallDistance = 0.0F;
@@ -206,7 +202,7 @@ public abstract class LivingEntityMixin extends Entity {
 
     private static Vec3d movementInputToVelocity(Vec3d movementInput, float speed, float yaw) {
         double d = movementInput.lengthSquared();
-        Vec3d vec3d = (d > 1.0D ? movementInput.normalize() : movementInput).multiply((double)speed);
+        Vec3d vec3d = (d > 1.0D ? movementInput.normalize() : movementInput).multiply(speed);
         float f = MathHelper.sin(yaw * 0.017453292F);
         float g = MathHelper.cos(yaw * 0.017453292F);
         return new Vec3d(vec3d.x * (double)g - vec3d.z * (double)f, vec3d.y, vec3d.z * (double)g + vec3d.x * (double)f);

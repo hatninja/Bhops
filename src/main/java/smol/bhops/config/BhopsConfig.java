@@ -13,6 +13,8 @@ public class BhopsConfig implements ConfigData {
 
     @ConfigEntry.Gui.Excluded
     public float sv_maxvelocity = 2.0F; //Maximum speed. (Now it's just for the speedometer colors)
+    @ConfigEntry.Gui.Excluded
+    public final double sv_gravity = 0.08D;
 
     public float sv_friction = 0.5F; //Ground friction.
     public float sv_accelerate = 0.1F; //Ground acceleration.
