@@ -73,6 +73,7 @@ public abstract class LivingEntityMixin extends Entity {
         //Enable for Players only
         if (config.exclusiveToPlayers && this.getType() != EntityType.PLAYER) { return; }
 
+
         //Disable on creative flying.
         if (this.getType() == EntityType.PLAYER
                 && isFlying((PlayerEntity) this.world.getEntityById(super.getEntityId()))) { return; }
@@ -212,6 +213,6 @@ public abstract class LivingEntityMixin extends Entity {
     }
 
     private static boolean isFlying(PlayerEntity player) {
-        return player.abilities.flying;
+        return player != null && player.abilities.flying;
     }
 }
