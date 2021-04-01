@@ -26,21 +26,17 @@ import java.util.Map;
 
 //TODO: Custom Jump sounds
 //TODO: Water Controls
+//TODO: Avoid rewrites of gravity & ladder code.
 
 @Mixin(LivingEntity.class)
 public abstract class LivingEntityMixin extends Entity {
     private BhopsConfig config = AutoConfig.getConfigHolder(BhopsConfig.class).getConfig();
 
     @Shadow private float movementSpeed;
-    @Shadow public float flyingSpeed;
     @Shadow public float sidewaysSpeed;
     @Shadow public float forwardSpeed;
     @Shadow private int jumpingCooldown;
-    @Shadow public float limbDistance;
-    @Shadow public float lastLimbDistance;
-    @Shadow public float limbAngle;
     @Shadow protected boolean jumping;
-    @Shadow @Final private Map<StatusEffect, StatusEffectInstance> activeStatusEffects;
 
     @Shadow protected abstract Vec3d applyClimbingSpeed(Vec3d velocity);
     @Shadow protected abstract float getJumpVelocity();
@@ -48,6 +44,9 @@ public abstract class LivingEntityMixin extends Entity {
     @Shadow public abstract StatusEffectInstance getStatusEffect(StatusEffect effect);
     @Shadow public abstract boolean isFallFlying();
     @Shadow public abstract boolean isClimbing();
+    @Shadow public abstract boolean canMoveVoluntarily();
+    @Shadow public abstract Vec3d method_26318(Vec3d vec3d, float f);
+    @Shadow public abstract void method_29242(LivingEntity livingEntity, boolean bl);
 
     private boolean wasOnGround;
 
@@ -57,21 +56,21 @@ public abstract class LivingEntityMixin extends Entity {
 
     @Inject(method = "travel", at = @At("HEAD"), cancellable = true)
     public void travel(Vec3d movementInput, CallbackInfo ci) {
-        //if (!this.canMoveVoluntarily() && !this.isLogicalSideForUpdatingMovement()) { return; }
-
-        //Cancel override if not in plain walking state..
-        if (this.isTouchingWater() || this.isInLava() || this.isFallFlying()) { return; }
-
         //Toggle Bhops
         if (!config.enableBhops) { return; }
-
         //Enable for Players only
         if (config.exclusiveToPlayers && this.getType() != EntityType.PLAYER) { return; }
 
-        //Disable on creative flying.
-        if (this.getType() == EntityType.PLAYER
-                && isFlying((PlayerEntity) this.world.getEntityById(super.getEntityId()))) { return; }
+        if (!this.canMoveVoluntarily() && !this.isLogicalSideForUpdatingMovement()) { return; }
 
+        //Cancel override if not in plain walking state.
+        if (this.isTouchingWater() || this.isInLava() || this.isFallFlying()) { return; }
+
+        //I don't have a better clue how to do this atm.
+        LivingEntity self = (LivingEntity) this.world.getEntityById(this.getEntityId());
+
+        //Disable on creative flying.
+        if (this.getType() == EntityType.PLAYER && isFlying((PlayerEntity) self)) { return; }
 
         //Reverse multiplication done by the function that calls this one.
         this.sidewaysSpeed /= 0.98F;
@@ -131,6 +130,9 @@ public abstract class LivingEntityMixin extends Entity {
 
             this.setVelocity(accelVec.add(accelDir));
 
+            //This method isn't friendly.
+            //this.method_26318(moveDir,(float) accelVel);
+
             //Too much effort to implement a speedcap.
             //if (accelVec.lengthSquared() > (config.sv_maxvelocity * config.sv_maxvelocity)) {
             //    this.setVelocity(this.getVelocity().normalize().multiply(config.sv_maxvelocity));
@@ -158,7 +160,7 @@ public abstract class LivingEntityMixin extends Entity {
             this.fallDistance = 0.0F;
         }
         if (this.hasStatusEffect(StatusEffects.LEVITATION)) {
-            yVel += (0.05D * (double)(this.getStatusEffect(StatusEffects.LEVITATION).getAmplifier() + 1) - preVel.y) * 0.2D;
+            yVel += (0.05D * (this.getStatusEffect(StatusEffects.LEVITATION).getAmplifier() + 1) - preVel.y) * 0.2D;
             this.fallDistance = 0.0F;
         } else if (this.world.isClient && !this.world.isChunkLoaded(blockPos)) {
             yVel = 0.0D;
@@ -170,15 +172,7 @@ public abstract class LivingEntityMixin extends Entity {
         //
         //Update limbs.
         //
-        this.lastLimbDistance = this.limbDistance;
-        double dx = this.getX() - this.prevX;
-        double dy = this instanceof Flutterer ? this.getY() - this.prevY : 0.0D;
-        double dz = this.getZ() - this.prevZ;
-        float dist = MathHelper.sqrt(dx * dx + dy * dy + dz * dz) * 4.0F;
-        if (dist > 1.0F) { dist = 1.0F; }
-
-        this.limbDistance += (dist - this.limbDistance) * 1F;
-        this.limbAngle += this.limbDistance;
+        this.method_29242(self, self instanceof Flutterer);
 
         //Override original method.
         ci.cancel();
