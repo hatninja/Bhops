@@ -10,15 +10,12 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
-import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import smol.bhops.config.BhopsConfig;
-
-import java.util.Map;
 
 //Reference Functions from Source:
 //FullWalkMove( )
@@ -46,7 +43,7 @@ public abstract class LivingEntityMixin extends Entity {
     @Shadow public abstract boolean isClimbing();
     @Shadow public abstract boolean canMoveVoluntarily();
     @Shadow public abstract Vec3d method_26318(Vec3d vec3d, float f);
-    @Shadow public abstract void method_29242(LivingEntity livingEntity, boolean bl);
+    @Shadow public abstract void updateLimbs(LivingEntity livingEntity, boolean bl);
 
     private boolean wasOnGround;
 
@@ -67,7 +64,7 @@ public abstract class LivingEntityMixin extends Entity {
         if (this.isTouchingWater() || this.isInLava() || this.isFallFlying()) { return; }
 
         //I don't have a better clue how to do this atm.
-        LivingEntity self = (LivingEntity) this.world.getEntityById(this.getEntityId());
+        LivingEntity self = (LivingEntity) this.world.getEntityById(this.getId());
 
         //Disable on creative flying.
         if (this.getType() == EntityType.PLAYER && isFlying((PlayerEntity) self)) { return; }
@@ -116,7 +113,7 @@ public abstract class LivingEntityMixin extends Entity {
         // Accelerate
         //
         if (sI != 0.0F || fI != 0.0F) {
-            Vec3d moveDir = movementInputToVelocity(new Vec3d(sI, 0.0F, fI), 1.0F, this.yaw);
+            Vec3d moveDir = movementInputToVelocity(new Vec3d(sI, 0.0F, fI), 1.0F, this.getYaw());
             Vec3d accelVec = this.getVelocity();
 
             double projVel = new Vec3d(accelVec.x, 0.0F, accelVec.z).dotProduct(moveDir);
@@ -172,7 +169,7 @@ public abstract class LivingEntityMixin extends Entity {
         //
         //Update limbs.
         //
-        this.method_29242(self, self instanceof Flutterer);
+        this.updateLimbs(self, self instanceof Flutterer);
 
         //Override original method.
         ci.cancel();
@@ -203,6 +200,6 @@ public abstract class LivingEntityMixin extends Entity {
     }
 
     private static boolean isFlying(PlayerEntity player) {
-        return player != null && player.abilities.flying;
+        return player != null && player.getAbilities().flying;
     }
 }
