@@ -18,8 +18,6 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import smol.bhops.config.BhopsConfig;
 
-import java.util.Map;
-
 //Reference Functions from Source:
 //FullWalkMove( )
 //PlayerMove()
@@ -30,7 +28,7 @@ import java.util.Map;
 
 @Mixin(LivingEntity.class)
 public abstract class LivingEntityMixin extends Entity {
-    private BhopsConfig config = AutoConfig.getConfigHolder(BhopsConfig.class).getConfig();
+    private final BhopsConfig config = AutoConfig.getConfigHolder(BhopsConfig.class).getConfig();
 
     @Shadow private float movementSpeed;
     @Shadow public float sidewaysSpeed;
@@ -44,9 +42,7 @@ public abstract class LivingEntityMixin extends Entity {
     @Shadow public abstract StatusEffectInstance getStatusEffect(StatusEffect effect);
     @Shadow public abstract boolean isFallFlying();
     @Shadow public abstract boolean isClimbing();
-    @Shadow public abstract boolean canMoveVoluntarily();
-    @Shadow public abstract Vec3d method_26318(Vec3d vec3d, float f);
-    @Shadow public abstract void method_29242(LivingEntity livingEntity, boolean bl);
+    @Shadow protected abstract void updateLimbs(boolean fluttering);
 
     private boolean wasOnGround;
 
@@ -67,7 +63,7 @@ public abstract class LivingEntityMixin extends Entity {
         if (this.isTouchingWater() || this.isInLava() || this.isFallFlying()) { return; }
 
         //I don't have a better clue how to do this atm.
-        LivingEntity self = (LivingEntity) this.world.getEntityById(this.getEntityId());
+        LivingEntity self = (LivingEntity) (Object) this;
 
         //Disable on creative flying.
         if (this.getType() == EntityType.PLAYER && isFlying((PlayerEntity) self)) { return; }
@@ -85,13 +81,13 @@ public abstract class LivingEntityMixin extends Entity {
 
         //Get Slipperiness and Movement speed.
         BlockPos blockPos = this.getVelocityAffectingPos();
-        float slipperiness = this.world.getBlockState(blockPos).getBlock().getSlipperiness();
+        float slipperiness = this.getWorld().getBlockState(blockPos).getBlock().getSlipperiness();
         float friction = 1-(slipperiness*slipperiness);
 
         //
         //Apply Friction
         //
-        boolean fullGrounded = this.wasOnGround && this.onGround; //Allows for no friction 1-frame upon landing.
+        boolean fullGrounded = this.wasOnGround && this.isOnGround(); //Allows for no friction 1-frame upon landing.
         if (fullGrounded) {
             Vec3d velFin = this.getVelocity();
             Vec3d horFin = new Vec3d(velFin.x,0.0F,velFin.z);
@@ -110,18 +106,18 @@ public abstract class LivingEntityMixin extends Entity {
                 );
             }
         }
-        this.wasOnGround = this.onGround;
+        this.wasOnGround = this.isOnGround();
 
         //
         // Accelerate
         //
         if (sI != 0.0F || fI != 0.0F) {
-            Vec3d moveDir = movementInputToVelocity(new Vec3d(sI, 0.0F, fI), 1.0F, this.yaw);
+            Vec3d moveDir = movementInputToVelocity(new Vec3d(sI, 0.0D, fI), 1.0F, this.getYaw());
             Vec3d accelVec = this.getVelocity();
 
             double projVel = new Vec3d(accelVec.x, 0.0F, accelVec.z).dotProduct(moveDir);
-            double accelVel = this.onGround ? config.sv_accelerate : config.sv_airaccelerate;
-            float maxVel = this.onGround ? this.movementSpeed * config.maxSpeedMul : config.sv_maxairspeed;
+            double accelVel = this.isOnGround() ? config.sv_accelerate : config.sv_airaccelerate;
+            float maxVel = this.isOnGround() ? this.movementSpeed * config.maxSpeedMul : config.sv_maxairspeed;
 
             if (projVel + accelVel > maxVel) {
                 accelVel = maxVel - projVel;
@@ -162,7 +158,7 @@ public abstract class LivingEntityMixin extends Entity {
         if (this.hasStatusEffect(StatusEffects.LEVITATION)) {
             yVel += (0.05D * (this.getStatusEffect(StatusEffects.LEVITATION).getAmplifier() + 1) - preVel.y) * 0.2D;
             this.fallDistance = 0.0F;
-        } else if (this.world.isClient && !this.world.isChunkLoaded(blockPos)) {
+        } else if (this.getWorld().isClient && !this.getWorld().isChunkLoaded(blockPos)) {
             yVel = 0.0D;
         } else if (!this.hasNoGravity()) {
             yVel -= gravity;
@@ -172,7 +168,7 @@ public abstract class LivingEntityMixin extends Entity {
         //
         //Update limbs.
         //
-        this.method_29242(self, self instanceof Flutterer);
+        this.updateLimbs(self instanceof Flutterer);
 
         //Override original method.
         ci.cancel();
@@ -203,6 +199,6 @@ public abstract class LivingEntityMixin extends Entity {
     }
 
     private static boolean isFlying(PlayerEntity player) {
-        return player != null && player.abilities.flying;
+        return player != null && player.getAbilities().flying;
     }
 }
